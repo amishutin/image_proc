@@ -39,6 +39,25 @@ void c_downscale2x_c1(uint8_t *pSrc, uint8_t *pDst, int height, int width)
     }
 }
 
+#include <riscv_vector.h>
+void c_downscale2x_c1(uint8_t *pSrc, uint8_t *pDst, int height, int width)
+{
+    const int downscale = 2;
+    int dstWidth = width / downscale;
+    int dstHeight = height / downscale;
+    int vl = vsetvlmax_e32m4();
+    
+    for(int y = 0; y < dstHeight; y++){
+        for(int x = 0; x < dstWidth; x++){
+            vl = vsetvl_e32m4(dstWidth);
+            vfloat32m4_t srcv = vle_v_f32m4(dstWidth, vl);
+            
+        }
+    }
+}
+
+
+
 void c_blur_c3(uint8_t* src, uint8_t* dst, int st, int kh, int kw, int h, int w)
 {
   int j, i, y, x;

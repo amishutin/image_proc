@@ -1,6 +1,6 @@
 #include "implementation.hpp"
 #include <riscv_vector.h>
-
+#include <iostream>
 // RGB2GRAY conversion
 void impl_rgb2gray(cv::Mat &src, cv::Mat &dst)
 {
@@ -42,10 +42,44 @@ void impl_upscale2x(cv::Mat &src, cv::Mat &dst)
 }
 
 // Downscaling 2x
-void impl_downscale2x(cv::Mat &src, cv::Mat &dst)
+void impl_downscale2x(cv::Mat& src, cv::Mat&dst)
 {
-    static_cast<void>(src);
-    static_cast<void>(dst);
+if (src.channels() != 1){
+    return;
+}
+
+uint8_t * pSrc = src.data; 
+uint8_t * pDst = dst.data; 
+int height = src.rows; 
+int width = src.cols; 
+int downscale = 2; 
+int dstWidth = width / downscale; // >> 1 
+int dstHeight = height / downscale; 
+size_t vl = vsetvl_e8m4(8); 
+int remainder = dstWidth % vl;  
+size_t skip = 0; 
+size_t smth = 0; 
+for (size_t row = 0; row < (dstWidth * dstHeight); row += dstWidth){ 
+    for (size_t col = 0; col < dstWidth - remainder; col += vl){ 
+        vuint8m1_t vDst = vlse8_v_u8m1(pSrc + col * 2 + skip * 2, 2, vl); 
+        vse8_v_u8m1(pDst, vDst, vl); 
+        pDst += vl; 
+        smth += vl; 
+    } 
+    pDst += remainder; 
+    smth += remainder; 
+    skip += width;  
+}   
+    uint8_t * pDst2 = dst.data + (dstWidth - remainder); 
+    uint8_t * pSrc2 = src.data + (dstWidth - remainder) * 2; 
+    skip = 0;
+    size_t tempVl = remainder;
+    for (size_t row = 0; row < (dstWidth * dstHeight); row += dstWidth){
+        vuint8m1_t vDst = vlse8_v_u8m1(pSrc2 + skip * 2, 2, tempVl);
+        vse8_v_u8m1(pDst2 + row, vDst, tempVl);
+
+        skip += width;  
+    }
 }
 
 // Alpha compositing
