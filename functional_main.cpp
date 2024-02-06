@@ -148,10 +148,10 @@ int main(int argc, char **argv)
     // run_rgb2gray_functional(src);
     // run_threshold_functional(src_gray);
     // run_boxFilter_functional(src);
-    // run_morphology_functional(erode_img);
+    run_morphology_functional(erode_img);
     // run_upscale2x_functional(src);
     // run_downscale2x_functional(src);
-    run_alphaCompositing_functional(foreground, background, alpha);
+    // run_alphaCompositing_functional(foreground, background, alpha);
 
     return 0;
 }

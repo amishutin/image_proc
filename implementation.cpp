@@ -36,30 +36,70 @@ void impl_morphology(cv::Mat &src, cv::Mat &dst)
     bool result = 0;
     uint8_t* pSrc = reinterpret_cast<uint8_t*>(src.data);
     uint8_t* pDst = reinterpret_cast<uint8_t*>(dst.data);
-    size_t vl = vsetvl_e8m1(4);
-    for (int i = 1; i < src.rows - 1; i++)
-    {
-        for (int j = 1; j < src.cols - 1; j+=vl)
+    size_t vl = 0;
+    size_t size = src.rows;
+
+        for (int j = 1; j < size - 1; j+=vl - 2)
         {
+            vl = vsetvl_e8m8(size - j + 1);
+            for (int i = 1; i < src.rows - 1; i++)
+            {
             idx = (i * src.cols + j);
-            vuint8m1_t vidx = vle8_v_u8m1(pSrc + idx, vl);
-            vuint8m1_t vidx1 = vle8_v_u8m1(pSrc + idx - src.cols - 1, vl + 2);
-            vuint8m1_t vidx2 = vle8_v_u8m1(pSrc + idx - 1, vl + 2);
-            vuint8m1_t vidx3 = vle8_v_u8m1(pSrc + idx + src.cols - 1, vl + 2);
-            vuint8m1_t vres = vand_vv_u8m1(vidx1, vidx2, vl + 2);
-            vres = vand_vv_u8m1(vres, vidx3, vl + 2);
-            uint8_t* pTmp = new uint8_t*[vl + 2];
-            vse8_v_u8m1(pTmp, vres, vl + 2);
-            for (uint8_t t : pTmp){
-                std::cout << t << ' ';
+            // vuint8m8_t vidx = vle8_v_u8m8(pSrc + idx, vl);
+            vuint8m8_t vidx1 = vle8_v_u8m8(pSrc + idx - src.cols - 1, vl);
+            vuint8m8_t vidx2 = vle8_v_u8m8(pSrc + idx - 1, vl);
+            vuint8m8_t vidx3 = vle8_v_u8m8(pSrc + idx + src.cols - 1, vl);
+            vuint8m8_t vres = vand_vv_u8m8(vidx1, vidx2, vl);
+            vres = vand_vv_u8m8(vres, vidx3, vl);
+            // uint8_t* pTmp = new uint8_t[vl];
+            // vse8_v_u8m8(pTmp, vres, vl);
+            // for (int k = 0; k < vl; k++){
+            //     if (pTmp[k])
+            //     std::cout << '1';
+            //     else std::cout << '0';
+            // }
+            // std::cout << std::endl;
+            // delete[] pTmp;
+
+            vidx1 = vmv_v_v_u8m8(vres, vl);
+
+            // vidx2 = vsll_vx_u8m8(vres, 8, vl);
+            // vidx3 = vsrl_vx_u8m8(vres, 8, vl);
+            vidx2 = vslideup_vx_u8m8(vidx2, vidx1, 1, vl);
+
+            vidx3 = vslidedown_vx_u8m8(vidx3, vidx1, 1, vl);
+
+            vres = vand_vv_u8m8(vidx1, vidx2, vl);
+            vres = vand_vv_u8m8(vres, vidx3, vl);
+            vres = vsll_vx_u8m8(vres, 8, vl);
+            uint8_t* pTmp = new uint8_t[vl];
+            vse8_v_u8m8(pTmp, vres, vl);
+            for (int k = 0; k < vl; k++){
+                if (pTmp[k])
+                std::cout << '1';
+                else std::cout << '0';
             }
-            //vidx1 = vcopy_v_u8m1(vres);
-            // vidx1 = vsll_vx_u8m1(vres, 0, vl);
-            // vidx2 = vsll_vx_u8m1(vres, 1, vl);
-            // vidx3 = vsll_vx_u8m1(vres, 2, vl);
-            // vres = vand_vv_u8m1(vidx1, vidx2, vl);
-            // vres = vand_vv_u8m1(vres, vidx3, vl);
-            //vse8_v_u8m1(pSrc + idx, vres, vl); 
+            std::cout << std::endl;
+            delete[] pTmp;
+
+            vres = vslidedown_vx_u8m8(vres, vres, 1, vl);
+            pTmp = new uint8_t[vl];
+            vse8_v_u8m8(pTmp, vres, vl);
+            for (int k = 0; k < vl; k++){
+                if (pTmp[k])
+                std::cout << '1';
+                else std::cout << '0';
+            }
+            std::cout << std::endl;
+            delete[] pTmp;
+            vse8_v_u8m8(pDst + idx, vres, vl - 2); 
+            // for (int k = 0; k < vl; k++){
+            //     if (pDst[k + idx])
+            //     std::cout << '1';
+            //     else std::cout << '0';
+            // }
+            // std::cout << std::endl;
+            std::cout << std::endl;
         }
     }
     std::cout << "morph" << std::endl;
