@@ -155,19 +155,19 @@ int main(int argc, char **argv)
     }
 
     // [[for alpha compositing]]
-    Mat foreground = imread(img_path + "/pochita.png");
-    Mat background = imread(img_path + "/factory.png");
-    Mat alpha = imread(img_path + "/alpha.png");
-    // Convert Mat to float data type
-    foreground.convertTo(foreground, CV_32FC3);
-    background.convertTo(background, CV_32FC3); 
-    // Normalize the alpha mask to keep intensity between 0 and 1
-    alpha.convertTo(alpha, CV_32FC3, 1.0/255);
+    // Mat foreground = imread(img_path + "/pochita.png");
+    // Mat background = imread(img_path + "/factory.png");
+    // Mat alpha = imread(img_path + "/alpha.png");
+    // // Convert Mat to float data type
+    // foreground.convertTo(foreground, CV_32FC3);
+    // background.convertTo(background, CV_32FC3); 
+    // // Normalize the alpha mask to keep intensity between 0 and 1
+    // alpha.convertTo(alpha, CV_32FC3, 1.0/255);
 
-    // [[for morphology and threshold]]
-    Mat src = imread(img_path + "/pochita.png");
-    Mat src_gray;
-    cvtColor(src, src_gray, COLOR_RGB2GRAY);
+    // // [[for morphology and threshold]]
+    // Mat src = imread(img_path + "/pochita.png");
+    // Mat src_gray;
+    // cvtColor(src, src_gray, COLOR_RGB2GRAY);
 
     std::cout.precision(10);
     run_rgb2gray_perf(src);
