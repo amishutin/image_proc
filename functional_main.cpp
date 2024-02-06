@@ -129,26 +129,40 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    // [[for alpha compositing]]
-    Mat foreground = imread(img_path + "/pochita.png");
-    Mat background = imread(img_path + "/factory.png");
-    Mat alpha = imread(img_path + "/alpha.png");
-    Mat erode_img = imread(img_path + "/erode_img.png", IMREAD_GRAYSCALE);
-    // Convert Mat to float data type
-    foreground.convertTo(foreground, CV_32FC3);
-    background.convertTo(background, CV_32FC3); 
-    // Normalize the alpha mask to keep intensity between 0 and 1
-    alpha.convertTo(alpha, CV_32FC3, 1.0/255);
+    // // [[for alpha compositing]]
+    // Mat foreground = imread(img_path + "/pochita.png");
+    // Mat background = imread(img_path + "/factory.png");
+    // Mat alpha = imread(img_path + "/alpha.png");
+    
+    // Mat erode_img = imread(img_path + "/erode_img.png", IMREAD_GRAYSCALE);
+    // Mat bin_erode_img;
+    // cv::threshold(erode_img,bin_erode_img,127,255,cv::THRESH_BINARY);
 
-    Mat src = imread(img_path + "/pochita.png");
-    Mat src_gray;
-    cvtColor(src, src_gray, COLOR_RGB2GRAY);
+    // // Convert Mat to float data type
+    // foreground.convertTo(foreground, CV_32FC3);
+    // background.convertTo(background, CV_32FC3); 
+    // // Normalize the alpha mask to keep intensity between 0 and 1
+    // alpha.convertTo(alpha, CV_32FC3, 1.0/255);
+
+    // Mat src = imread(img_path + "/pochita.png");
+    // Mat src_gray;
+    // cvtColor(src, src_gray, COLOR_RGB2GRAY);
+
+    // Mat erode_img = imread(img_path + "/erode_img.jpeg");
+    // Mat gray_erode_img;
+    // cvtColor(erode_img, gray_erode_img, COLOR_RGB2GRAY);
+    // Mat bin_erode_img;
+    // cv::threshold(gray_erode_img,bin_erode_img,127,255,cv::THRESH_BINARY);
+
+    Mat erode_img = imread(img_path + "/erode_img.png", IMREAD_GRAYSCALE);
+    Mat bin_erode_img;
+    cv::threshold(erode_img,bin_erode_img,127,255,cv::THRESH_BINARY);
 
 
     // run_rgb2gray_functional(src);
     // run_threshold_functional(src_gray);
     // run_boxFilter_functional(src);
-    run_morphology_functional(erode_img);
+    run_morphology_functional(bin_erode_img);
     // run_upscale2x_functional(src);
     // run_downscale2x_functional(src);
     // run_alphaCompositing_functional(foreground, background, alpha);
