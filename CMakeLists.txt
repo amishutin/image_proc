@@ -21,7 +21,7 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
 # Declare the executable target built from your sources
 add_executable(opencv_example example.cpp)
-add_executable(perf_main perf_main.cpp implementation.cpp ref_implementation.cpp)
+add_executable(perf_main perf_main.cpp implementation.cpp ref_implementation.cpp c_impl.cpp)
 add_executable(functional_main functional_main.cpp implementation.cpp ref_implementation.cpp)
 
 # Link your application with OpenCV libraries

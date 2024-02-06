@@ -4,193 +4,122 @@
 #include "opencv2/videoio.hpp"
 #include "implementation.hpp"
 #include "ref_implementation.hpp"
+#include "c_impl.hpp"
 #include <iostream>
 #include <string>
 #include <chrono>
 
+#define TIME_SETUP()\
+    auto start = std::chrono::steady_clock::now();     \
+    auto end = std::chrono::steady_clock::now();       \
+    std::chrono::duration<double> diff;                \
+
+#define TIME_MEASURE(FUNC, NAME)                       \
+    start = std::chrono::steady_clock::now();          \
+    for (uint32_t i = 0U; i < repetitions; ++i)        \
+    {                                                  \
+        FUNC;                                          \
+    }                                                  \
+    end = std::chrono::steady_clock::now();            \
+    diff = end - start;                                \
+    std::cout << "\n" << NAME << " took " << diff.count() / static_cast<double>(repetitions) << '\n'; \
+
 using namespace cv;
 static std::string img_path = "";
 
-static constexpr uint32_t repetitions = 1000U;
+static constexpr uint32_t repetitions = 10U;
 
 // RGB2GRAY conversion
 void run_rgb2gray_perf(Mat& src)
 {
-    Mat dst_ref;
-    auto start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        ref_rgb2gray(src, dst_ref);
-    }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "\nReference rgb2gray took " << diff.count() / static_cast<double>(repetitions) << '\n';
-
+    cv::Mat dst_ref;
     Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
-    start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        impl_rgb2gray(src, dst_ref);
-    }
-    end = std::chrono::steady_clock::now();
-    diff = end - start;
-    std::cout << "\nRVV0.7 rgb2gray took " << diff.count() / static_cast<double>(repetitions) << '\n';
+    TIME_SETUP();
+
+    TIME_MEASURE(ref_rgb2gray(src, dst_ref), "Reference rgb2gray");
+
+    TIME_MEASURE(c_rgb2gray_c3(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(dst_ref.data), src.rows, src.cols), "C_Impl rgb2gray");
+
+    TIME_MEASURE(impl_rgb2gray(src, dst), "RVV0.7 rgb2gray");
 }
 
 // Threshold function
 void run_threshold_perf(cv::Mat &src)
 {
     Mat dst_ref;
+    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
     const double thresh = 125., maxval = 0.;
     const int type = THRESH_TRUNC;
-    auto start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        ref_threshold(src, dst_ref, thresh, maxval, type);
-    }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "\nReference threshold took " << diff.count() / static_cast<double>(repetitions) << '\n';
+    
+    TIME_SETUP();
 
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
-     start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        impl_threshold(src, dst, thresh, maxval, type);
-    }
-    end = std::chrono::steady_clock::now();
-    diff = end - start;
-    std::cout << "\nRVV0.7 threshold took " << diff.count() / static_cast<double>(repetitions) << '\n';
-}
+    TIME_MEASURE(ref_threshold(src, dst_ref, thresh, maxval, type), "Reference threshold");
 
-//Box filter
-void run_boxFilter_perf(cv::Mat &src)
-{
-    Mat dst_ref;
-    const int ddepth = -1;
-    const Size size = Size(5,5);
+    TIME_MEASURE(c_threshold_c1(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(dst_ref.data), src.rows, src.cols, 1), "C_Impl threshold");
 
-    auto start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        ref_boxFilter(src, dst_ref, ddepth, size);
-    }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "\nReference boxFilter took " << diff.count() / static_cast<double>(repetitions) << '\n';
-
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
-    start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        impl_boxFilter(src, dst, ddepth, size);
-    }
-    end = std::chrono::steady_clock::now();
-    diff = end - start;
-    std::cout << "\nRVV0.7 boxFilter took " << diff.count() / static_cast<double>(repetitions) << '\n';
+    TIME_MEASURE(impl_threshold(src, dst, thresh, maxval, type), "RVV0.7 threshold");
 }
 
 // Morphology operation - opening
 void run_morphology_perf(cv::Mat &src)
 {
     Mat dst_ref;
+    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
     const int op = MORPH_OPEN;
 
-    auto start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        ref_morphology(src, dst_ref);
-    }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "\nReference morphology took " << diff.count() / static_cast<double>(repetitions) << '\n';
+    TIME_SETUP();
 
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
-    start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        impl_morphology(src, dst);
-    }
-    end = std::chrono::steady_clock::now();
-    diff = end - start;
-    std::cout << "\nRVV0.7 morphology took " << diff.count() / static_cast<double>(repetitions) << '\n';
-    
+    TIME_MEASURE(ref_morphology(src, dst_ref), "Reference morphology");
+
+    TIME_MEASURE(c_morphology(src, dst_ref), "C_Impl morphology");
+
+    TIME_MEASURE(impl_morphology(src, dst), "RVV0.7 morphology");
 }
 
 // Upscaling 2x
 void run_upscale2x_perf(cv::Mat &src)
 {
     Mat dst_ref;
-
-    auto start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        ref_upscale2x(src, dst_ref);
-    }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "\nReference upscale2x took " << diff.count() / static_cast<double>(repetitions) << '\n';
-
     Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
-    start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        impl_upscale2x(src, dst);
-    }
-    end = std::chrono::steady_clock::now();
-    diff = end - start;
-    std::cout << "\nRVV0.7 upscale2x took " << diff.count() / static_cast<double>(repetitions) << '\n';
+
+    TIME_SETUP();
+
+    TIME_MEASURE(ref_upscale2x(src, dst_ref), "Reference upscale2x");
+
+    // TIME_MEASURE(c_upscale2x(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(dst_ref.data), src.rows, src.cols), "C_Impl upscale2x");
+
+    TIME_MEASURE(impl_upscale2x(src, dst), "RVV0.7 upscale2x");
+
 }
 
 // Downscaling 2x
 void run_downscale2x_perf(cv::Mat &src)
 {
     Mat dst_ref;
-
-    auto start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        ref_downscale2x(src, dst_ref);
-    }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "\nReference downscale2x took " << diff.count() / static_cast<double>(repetitions) << '\n';
-
     Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
-    start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        impl_downscale2x(src, dst);
-    }
-    end = std::chrono::steady_clock::now();
-    diff = end - start;
-    std::cout << "\nRVV0.7 downscale2x took " << diff.count() / static_cast<double>(repetitions) << '\n';
 
+    TIME_SETUP();
+
+    TIME_MEASURE(ref_downscale2x(src, dst_ref), "Reference downscale2x");
+
+    TIME_MEASURE(c_downscale2x_c1(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(dst_ref.data), src.rows, src.cols), "C_Impl downscale2x");
+
+    TIME_MEASURE(impl_downscale2x(src, dst), "RVV0.7 downscale2x");
 }
 
 // Alpha compositing
 void run_alphaCompositing_perf(cv::Mat& foreground, cv::Mat& background, cv::Mat& alpha)
 {
     Mat dst_ref;
+    Mat dst = Mat::zeros(foreground.size(), foreground.type());
 
-    auto start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        ref_alphaCompositing(foreground, background, alpha, dst_ref);
-    }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "\nReference alphaCompositing took " << diff.count() / static_cast<double>(repetitions) << '\n';
+    TIME_SETUP();
 
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
-    start = std::chrono::steady_clock::now();
-    for (uint32_t i = 0U; i < repetitions; ++i)
-    {
-        impl_alphaCompositing(foreground, background, alpha, dst);
-    }
-    end = std::chrono::steady_clock::now();
-    diff = end - start;
-    std::cout << "\nRVV0.7 alphaCompositing took " << diff.count() / static_cast<double>(repetitions) << '\n';
+    TIME_MEASURE(ref_alphaCompositing(foreground, background, alpha, dst_ref), "Reference alphacompositing");
+
+    TIME_MEASURE(c_impl_alphaCompositing(foreground, foreground, alpha, dst_ref), "C_Impl alphacompositing");
+
+    TIME_MEASURE(impl_alphaCompositing(foreground, background, alpha, dst), "RVV0.7 alphacompositing");    
 }
 
 
@@ -239,12 +168,11 @@ int main(int argc, char **argv)
     cvtColor(src, src_gray, COLOR_RGB2GRAY);
 
     std::cout.precision(10);
-    run_rgb2gray_perf(src);
-    run_threshold_perf(src_gray);
-    run_boxFilter_perf(src);
-    run_morphology_perf(src_gray);
-    run_upscale2x_perf(src);
-    run_downscale2x_perf(src);
+    // run_rgb2gray_perf(src);
+    // run_threshold_perf(src_gray);
+    // run_morphology_perf(src_gray);
+    // run_upscale2x_perf(src);
+    // run_downscale2x_perf(src);
     run_alphaCompositing_perf(foreground, background, alpha);
     return 0;
 }
