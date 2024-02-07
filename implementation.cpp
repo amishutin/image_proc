@@ -9,14 +9,28 @@ void impl_rgb2gray(cv::Mat &src, cv::Mat &dst)
 }
 
 // Threshold function
-void impl_threshold(cv::Mat &src,cv:: Mat &dst, double thresh, double maxval, int type)
+ void impl_threshold(cv::Mat &src,cv:: Mat &dst, double thresh, double maxval, int type)
 {
-    static_cast<void>(src);
-    static_cast<void>(dst);
-    static_cast<void>(thresh);
-    static_cast<void>(maxval);
-    static_cast<void>(type);
+     int height = src.rows;
+    int width = src.cols;
+    uint64_t len = height * width;
+    const int vl = vsetvl_e8m1(len);
+    uint8_t thresh_u8 = static_cast<uint8_t>(thresh);
+    
+    uint8_t *pSrc = reinterpret_cast<uint8_t*>(src.data);
+    uint8_t *pDst = reinterpret_cast<uint8_t*>(dst.data);
+
+    for (int x = 0; x < len; x += vl) {
+            vuint8m1_t src_vec = vle8_v_u8m1(&pSrc[x], vl);
+            vuint8m1_t threshold = vmv_v_x_u8m1(thresh_u8, vl);
+            vuint8m1_t result = vminu_vv_u8m1(src_vec, threshold, vl);
+
+            vse8_v_u8m1(&pDst[x], result, vl);
+    }
+
 }
+
+
 
 //Box filter
 void impl_boxFilter(cv::Mat &src, cv::Mat &dst, int ddepth, cv::Size ksize)
