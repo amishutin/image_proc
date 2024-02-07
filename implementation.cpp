@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-#define VER3
+#define VER2
 #define VEC vuint8m4_t
 #define VSE vse8_v_u8m4
 #define VLE vle8_v_u8m4
@@ -11,6 +11,7 @@
 #define VSU vslideup_vx_u8m4
 #define VSD vslidedown_vx_u8m4
 #define VMV vmv_v_v_u8m4
+#define VMVX vmv_v_x_u8m4
 #define VSET vsetvl_e8m4
 #define sieve sieve3
 
@@ -57,7 +58,6 @@ void impl_morphology(cv::Mat &src, cv::Mat &dst)
     size_t vl = 0;
     size_t size = src.cols;
     uint8_t* buffer[3];
-    //VEC* vbuffer[3];
 
     VEC vidx1;
     VEC vidx2;
@@ -72,11 +72,8 @@ void impl_morphology(cv::Mat &src, cv::Mat &dst)
             buffer[1] = pSrc;
             buffer[2] = pSrc + src.cols;
 
-            // vidx1 = VLE(pSrc, vl);
-            // vidx2 = VLE(pSrc + src.cols, vl);
-
-            // vbuffer[1] = &vidx1;
-            // vbuffer[2] = &vidx2;
+            vidx1 = VLE(pSrc, vl);
+            vidx2 = VLE(pSrc + src.cols, vl);
 
             for (int i = 1; i < src.rows - 1; i++)
             {
@@ -86,13 +83,13 @@ void impl_morphology(cv::Mat &src, cv::Mat &dst)
             buffer[1] = buffer[2];
             buffer[2] = pSrc + idx + src.cols - 1;
 
-            VEC vidx1 = VLE(buffer[0], vl);
-            VEC vidx2 = VLE(buffer[1], vl);
-            VEC vidx3 = VLE(buffer[2], vl);
+            vidx1 = VLE(buffer[0], vl);
+            vidx2 = VLE(buffer[1], vl);
+            vidx3 = VLE(buffer[2], vl);
 
-            // vbuffer[0] = vbuffer[1];
-            // vbuffer[1] = vbuffer[2];
-            // vbuffer[2] = *(VLE(pSrc + idx + src.cols - 1, vl));
+            // vidx1 = VLE(pSrc + idx - src.cols - 1, vl);
+            // vidx2 = VLE(pSrc + idx - 1, vl);
+            // vidx3 = VLE(pSrc + idx + src.cols - 1, vl);
 
             VEC vres = VAND(vidx1, vidx2, vl);
             vres = VAND(vres, vidx3, vl);
@@ -105,18 +102,6 @@ void impl_morphology(cv::Mat &src, cv::Mat &dst)
 
             vres = VAND(vidx1, vidx2, vl);
             vres = VAND(vres, vidx3, vl);
-
-            // VEC vres = VAND(vbuffer[0], vbuffer[1], vl);
-            // vres = VAND(vres, vbuffer[3], vl);
-
-            // vbuffer[0] = VMV(vres, vl);
-
-            // vbuffer[1] = VSU(vbuffer[1], vbuffer[0], 1, vl);
-
-            // vbuffer[2] = VSD(vbuffer[2], vbuffer[0], 1, vl);
-
-            // vres = VAND(vbuffer[0], vbuffer[1], vl);
-            // vres = VAND(vres, vbuffer[2], vl);
 
             vres = VSD(vres, vres, 1, vl);
 
@@ -355,6 +340,149 @@ void impl_morphology(cv::Mat &src, cv::Mat &dst)
         }
     // std::cout << "morph" << std::endl;
 }
+
+#elif defined(VER4)
+
+    void impl_morphology(cv::Mat &src, cv::Mat &dst)
+{
+    // std::cout << "morph start" << std::endl;
+    
+    int idx;
+    bool result = 0;
+    uint8_t* pSrc = reinterpret_cast<uint8_t*>(src.data);
+    uint8_t* pDst = reinterpret_cast<uint8_t*>(dst.data);
+    size_t vl = 0;
+    size_t size = src.cols;
+    //uint8_t* buffer[3];
+
+    VEC vidx1;
+    VEC vidx2;
+    VEC vidx3;
+
+    VEC v0 = VMVX(0, vl);
+
+        for (int j = 1; j < size - 1; j+=vl - 2)
+        {
+            vl = VSET(size - j + 1);
+
+            //             buffer[1] = pSrc;
+            // buffer[2] = pSrc + src.cols;
+
+            // vidx1 = VLE(pSrc, vl);
+            // vidx2 = VLE(pSrc + src.cols, vl);
+
+            //begin
+
+            for (int i = 1; i < src.rows - 1; i++)
+            {
+            idx = (i * src.cols + j);
+
+            //             buffer[0] = buffer[1];
+            // buffer[1] = buffer[2];
+            // buffer[2] = pSrc + idx + src.cols - 1;
+
+            // vidx1 = VLE(buffer[0], vl);
+            // vidx2 = VLE(buffer[1], vl);
+            // vidx3 = VLE(buffer[2], vl);
+
+            vidx1 = VLE(pSrc + idx - src.cols - 1, vl);
+            vidx2 = VLE(pSrc + idx - 1, vl);
+            vidx3 = VLE(pSrc + idx + src.cols - 1, vl);
+
+
+
+            VEC vres = VAND(vidx1, vidx2, vl);
+            vres = VAND(vres, vidx3, vl);
+
+            vidx1 = VMV(vres, vl);
+
+            vidx2 = VSU(vidx2, vidx1, 1, vl);
+
+            vidx3 = VSD(vidx3, vidx1, 1, vl);
+
+            vres = VAND(vidx1, vidx2, vl);
+            vres = VAND(vres, vidx3, vl);
+
+            vres = VSD(vres, vres, 1, vl);
+
+            VSE(pDst + idx, vres, vl - 2);
+            }
+        }
+    // std::cout << "morph" << std::endl;
+}
+
+#elif defined(VER5)
+
+    void impl_morphology(cv::Mat &src, cv::Mat &dst)
+{
+    // std::cout << "morph start" << std::endl;
+    
+    int idx;
+    bool result = 0;
+    uint8_t* pSrc = reinterpret_cast<uint8_t*>(src.data);
+    uint8_t* pDst = reinterpret_cast<uint8_t*>(dst.data);
+    size_t vl = 0;
+    size_t size = src.cols;
+    uint8_t buf[3 * size];
+
+    VEC vidx1;
+    VEC vidx2;
+    VEC vidx3;
+
+    VEC v0 = VMVX(0, vl);
+
+        // for (int j = 1; j < size - 1; j+=vl - 2)
+        // {
+            vl = VSET(size - j + 1);
+
+            // buffer[1] = pSrc;
+            // buffer[2] = pSrc + src.cols;
+
+            // vidx1 = VLE(pSrc, vl);
+            // vidx2 = VLE(pSrc + src.cols, vl);
+
+            //begin
+
+            for (int i = 1; i < src.rows - 1; i++)
+            {
+                for (int j = 1; j < src.cols - 1; j++)
+            idx = (i * src.cols + j);
+
+            //             buffer[0] = buffer[1];
+            // buffer[1] = buffer[2];
+            // buffer[2] = pSrc + idx + src.cols - 1;
+
+            // vidx1 = VLE(buffer[0], vl);
+            // vidx2 = VLE(buffer[1], vl);
+            // vidx3 = VLE(buffer[2], vl);
+
+            vidx1 = VLE(pSrc + idx - src.cols - 1, vl);
+            vidx2 = VLE(pSrc + idx - 1, vl);
+            vidx3 = VLE(pSrc + idx + src.cols - 1, vl);
+
+
+
+            VEC vres = VAND(vidx1, vidx2, vl);
+            vres = VAND(vres, vidx3, vl);
+
+            vidx1 = VMV(vres, vl);
+
+            vidx2 = VSU(vidx2, vidx1, 1, vl);
+
+            vidx3 = VSD(vidx3, vidx1, 1, vl);
+
+            vres = VAND(vidx1, vidx2, vl);
+            vres = VAND(vres, vidx3, vl);
+
+            vres = VSD(vres, vres, 1, vl);
+
+            VSE(pDst + idx, vres, vl - 2);
+            }
+        // }
+    // std::cout << "morph" << std::endl;
+}
+
+
 #endif
 
 // Upscaling 2x
