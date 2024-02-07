@@ -8,8 +8,7 @@ void impl_rgb2gray(cv::Mat &src, cv::Mat &dst)
 uint8_t* pSrc = reinterpret_cast<uint8_t*>(src.data);
 uint8_t* pDst = reinterpret_cast<uint8_t*>(dst.data);
 
-int height = src.rows;
-int width = src.cols;
+int height = src.rows, width = src.cols;
 int len = width * height * src.channels();
 
 size_t vl = vsetvl_e8m1(len);
