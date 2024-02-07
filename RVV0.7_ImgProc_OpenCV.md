@@ -46,8 +46,8 @@ $ git checkout e64857c5611d5898b7b30640a775331488a5ebef
 $ cd ~
 $ mkdir _opencv_c910v
 $ cd ./_opencv_c910v
-$ export PATH=${TOOLCHAIN_ROOT}/bin:${PATH}
 $ export TOOLCHAIN_ROOT=/opt/riscv
+$ export PATH=${TOOLCHAIN_ROOT}/bin:${PATH}
 $ PATH=${TOOLCHAIN_ROOT}/bin:${PATH} cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DWITH_OPENCL=OFF -DCMAKE_TOOLCHAIN_FILE=../opencv/platforms/linux/riscv64-071-gcc.toolchain.cmake -DCORE=C910V ../opencv/
 $ ninja -j 8
 $ ninja install
