@@ -96,7 +96,7 @@ void run_upscale2x_perf(cv::Mat &src)
 void run_downscale2x_perf(cv::Mat &src)
 {
     Mat dst_ref;
-    Mat c_dst_ref = Mat::zeros(src.size(), src.type());
+    Mat c_dst_ref = Mat::zeros(src.rows / 2, src.cols / 2, src.type());
     Mat dst = Mat::zeros(src.rows / 2, src.cols / 2, src.type());
 
     TIME_SETUP();
@@ -170,11 +170,11 @@ int main(int argc, char **argv)
     cvtColor(src, src_gray, COLOR_RGB2GRAY);
 
     std::cout.precision(10);
-    run_rgb2gray_perf(src);
-    run_threshold_perf(src_gray);
-    run_morphology_perf(src_gray);
-    run_upscale2x_perf(src);
-    run_downscale2x_perf(src);
-    run_alphaCompositing_perf(foreground, background, alpha);
+    // run_rgb2gray_perf(src);
+    // run_threshold_perf(src_gray);
+    // run_morphology_perf(src_gray);
+    // run_upscale2x_perf(src);
+    run_downscale2x_perf(src_gray);
+    // run_alphaCompositing_perf(foreground, background, alpha);
     return 0;
 }
