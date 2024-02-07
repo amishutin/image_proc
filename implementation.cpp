@@ -1,6 +1,5 @@
 #include "implementation.hpp"
 #include <riscv_vector.h>
-#include <iostream>
 
 // RGB2GRAY conversion
 void impl_rgb2gray(cv::Mat &src, cv::Mat &dst)
@@ -86,7 +85,7 @@ void impl_alphaCompositing(cv::Mat& foreground, cv::Mat& background, cv::Mat& al
         return res;
     };
 
-    for(int vec_block = 0; vec_block < pixelNum; vec_block += vl, pFg += vl, pBg += vl, pA += vl, pDst += vl)
+    for(int vec_block = 0; vec_block < pixelNum - leftovers; vec_block += vl, pFg += vl, pBg += vl, pA += vl, pDst += vl)
     {
         img1 = vle32_v_f32m1(pFg, vl);
         img2 = vle32_v_f32m1(pBg, vl);

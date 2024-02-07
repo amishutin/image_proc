@@ -32,13 +32,14 @@ static constexpr uint32_t repetitions = 10U;
 // RGB2GRAY conversion
 void run_rgb2gray_perf(Mat& src)
 {
-    cv::Mat dst_ref;
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
+    Mat dst_ref;
+    Mat c_dst_ref = Mat::zeros(src.size(), src.type());
+    Mat dst = Mat::zeros(src.size(), src.type());
     TIME_SETUP();
 
     TIME_MEASURE(ref_rgb2gray(src, dst_ref), "Reference rgb2gray");
 
-    TIME_MEASURE(c_rgb2gray_c3(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(dst_ref.data), src.rows, src.cols), "C_Impl rgb2gray");
+    TIME_MEASURE(c_rgb2gray_c3(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(c_dst_ref.data), src.rows, src.cols), "C_Impl rgb2gray");
 
     TIME_MEASURE(impl_rgb2gray(src, dst), "RVV0.7 rgb2gray");
 }
@@ -47,7 +48,8 @@ void run_rgb2gray_perf(Mat& src)
 void run_threshold_perf(cv::Mat &src)
 {
     Mat dst_ref;
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
+    Mat c_dst_ref = Mat::zeros(src.size(), src.type());
+    Mat dst = Mat::zeros(src.size(), src.type());
     const double thresh = 125., maxval = 0.;
     const int type = THRESH_TRUNC;
     
@@ -55,7 +57,7 @@ void run_threshold_perf(cv::Mat &src)
 
     TIME_MEASURE(ref_threshold(src, dst_ref, thresh, maxval, type), "Reference threshold");
 
-    TIME_MEASURE(c_threshold_c1(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(dst_ref.data), src.rows, src.cols, 1), "C_Impl threshold");
+    TIME_MEASURE(c_threshold_c1(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(c_dst_ref.data), src.rows, src.cols, 1), "C_Impl threshold");
 
     TIME_MEASURE(impl_threshold(src, dst, thresh, maxval, type), "RVV0.7 threshold");
 }
@@ -64,14 +66,15 @@ void run_threshold_perf(cv::Mat &src)
 void run_morphology_perf(cv::Mat &src)
 {
     Mat dst_ref;
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
+    Mat c_dst_ref = Mat::zeros(src.size(), src.type());
+    Mat dst = Mat::zeros(src.size(), src.type());
     const int op = MORPH_OPEN;
 
     TIME_SETUP();
 
     TIME_MEASURE(ref_morphology(src, dst_ref), "Reference morphology");
 
-    TIME_MEASURE(c_morphology(src, dst_ref), "C_Impl morphology");
+    TIME_MEASURE(c_morphology(src, c_dst_ref), "C_Impl morphology");
 
     TIME_MEASURE(impl_morphology(src, dst), "RVV0.7 morphology");
 }
@@ -80,29 +83,27 @@ void run_morphology_perf(cv::Mat &src)
 void run_upscale2x_perf(cv::Mat &src)
 {
     Mat dst_ref;
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
+    Mat dst = Mat::zeros(src.size(), src.type());
 
     TIME_SETUP();
 
     TIME_MEASURE(ref_upscale2x(src, dst_ref), "Reference upscale2x");
 
-    // TIME_MEASURE(c_upscale2x(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(dst_ref.data), src.rows, src.cols), "C_Impl upscale2x");
-
     TIME_MEASURE(impl_upscale2x(src, dst), "RVV0.7 upscale2x");
-
 }
 
 // Downscaling 2x
 void run_downscale2x_perf(cv::Mat &src)
 {
     Mat dst_ref;
-    Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
+    Mat c_dst_ref = Mat::zeros(src.size(), src.type());
+    Mat dst = Mat::zeros(src.rows / 2, src.cols / 2, src.type());
 
     TIME_SETUP();
 
     TIME_MEASURE(ref_downscale2x(src, dst_ref), "Reference downscale2x");
 
-    TIME_MEASURE(c_downscale2x_c1(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(dst_ref.data), src.rows, src.cols), "C_Impl downscale2x");
+    TIME_MEASURE(c_downscale2x_c1(reinterpret_cast<uint8_t*>(src.data), reinterpret_cast<uint8_t*>(c_dst_ref.data), src.rows, src.cols), "C_Impl downscale2x");
 
     TIME_MEASURE(impl_downscale2x(src, dst), "RVV0.7 downscale2x");
 }
@@ -111,13 +112,14 @@ void run_downscale2x_perf(cv::Mat &src)
 void run_alphaCompositing_perf(cv::Mat& foreground, cv::Mat& background, cv::Mat& alpha)
 {
     Mat dst_ref;
+    Mat c_dst_ref = Mat::zeros(foreground.size(), foreground.type());
     Mat dst = Mat::zeros(foreground.size(), foreground.type());
 
     TIME_SETUP();
 
     TIME_MEASURE(ref_alphaCompositing(foreground, background, alpha, dst_ref), "Reference alphacompositing");
 
-    TIME_MEASURE(c_impl_alphaCompositing(foreground, foreground, alpha, dst_ref), "C_Impl alphacompositing");
+    TIME_MEASURE(c_impl_alphaCompositing(foreground, background, alpha, c_dst_ref), "C_Impl alphacompositing");
 
     TIME_MEASURE(impl_alphaCompositing(foreground, background, alpha, dst), "RVV0.7 alphacompositing");    
 }
@@ -168,11 +170,11 @@ int main(int argc, char **argv)
     cvtColor(src, src_gray, COLOR_RGB2GRAY);
 
     std::cout.precision(10);
-    // run_rgb2gray_perf(src);
-    // run_threshold_perf(src_gray);
-    // run_morphology_perf(src_gray);
-    // run_upscale2x_perf(src);
-    // run_downscale2x_perf(src);
+    run_rgb2gray_perf(src);
+    run_threshold_perf(src_gray);
+    run_morphology_perf(src_gray);
+    run_upscale2x_perf(src);
+    run_downscale2x_perf(src);
     run_alphaCompositing_perf(foreground, background, alpha);
     return 0;
 }
