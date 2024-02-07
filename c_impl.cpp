@@ -81,7 +81,7 @@ void c_morphology(cv::Mat &src, cv::Mat &dst)
             dst.at<uint8_t>(idx) = (src.at<uint8_t>(idx - src.cols - 1) & src.at<uint8_t>(idx - src.cols) &
                       src.at<uint8_t>(idx - src.cols + 1) & src.at<uint8_t>(idx - 1) &
                       src.at<uint8_t>(idx) & src.at<uint8_t>(idx + 1) & src.at<uint8_t>(idx + src.cols - 1) &
-                      src.at<uint8_t>(idx + src.cols) & src.at<uint8_t>(idx + src.cols + 1)) ? 255 : 0;
+                      src.at<uint8_t>(idx + src.cols) & src.at<uint8_t>(idx + src.cols + 1));
         }
     }
 }
