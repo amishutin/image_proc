@@ -3,11 +3,11 @@
 #include <iostream>
 
 #define setvl vsetvl_e8m1
-#define lse vlse8_v_u8m2
-#define fwcvt vfwcvt_f_xu_v_f16m4
-#define fmul vfmul_vf_f16m4
-#define fadd vfadd_vv_f16m4
-#define fncvt vfncvt_xu_f_w_u8m2 
+#define lse vlse8_v_u8m1
+#define fwcvt vfwcvt_f_xu_v_f16m2
+#define fmul vfmul_vf_f16m2
+#define fadd vfadd_vv_f16m2
+#define fncvt vfncvt_xu_f_w_u8m1 
 
 // RGB2GRAY conversion
 void impl_rgb2gray(cv::Mat &src, cv::Mat &dst)
@@ -21,8 +21,8 @@ int len = width * height * src.channels();
 size_t vl = setvl(len);
 int tail = (width * height) % vl;
 
-vuint8m2_t vRd, vGrn, vBl;
-vfloat16m4_t vres, vsum;
+vuint8m1_t vRd, vGrn, vBl;
+vfloat16m2_t vres, vsum;
 
 for (uint64_t i = 0; i < len - 3 * tail; i += vl * 3, pDst += vl) {
     vRd = lse(pSrc + i , 3, vl);        //запись со сдвигом
@@ -41,7 +41,7 @@ for (uint64_t i = 0; i < len - 3 * tail; i += vl * 3, pDst += vl) {
     vres = fadd(vsum, vBlm, vl);
 
     auto vresu = fncvt(vres, vl);
-    vse8_v_u8m2(pDst, vresu, vl);
+    vse8_v_u8m1(pDst, vresu, vl);
 }
 if (tail) {
     vl = tail;
@@ -61,7 +61,7 @@ if (tail) {
     vres = fadd(vsum, vBlm, vl);
 
     auto vresu = fncvt(vres, vl);
-    vse8_v_u8m2(pDst + (width * height) - tail, vresu, vl);
+    vse8_v_u8m1(pDst, vresu, vl);
 }
 }
 // Threshold function
