@@ -70,6 +70,7 @@ void impl_alphaCompositing(cv::Mat& foreground, cv::Mat& background, cv::Mat& al
         return res;
     };
 
+# if 0
     auto var2 = [](auto img1, auto img2, auto alphaVec, size_t vl){
         auto diff = vfsub_vv_f32m1(img1, img2, vl);
         auto res = vfmadd_vv_f32m1(alphaVec, diff, img2, vl);
@@ -84,6 +85,7 @@ void impl_alphaCompositing(cv::Mat& foreground, cv::Mat& background, cv::Mat& al
 
         return res;
     };
+#endif
 
     for(int vec_block = 0; vec_block < pixelNum - leftovers; vec_block += vl, pFg += vl, pBg += vl, pA += vl, pDst += vl)
     {
