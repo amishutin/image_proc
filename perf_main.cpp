@@ -27,7 +27,7 @@
 using namespace cv;
 static std::string img_path = "";
 
-static constexpr uint32_t repetitions = 10U;
+static constexpr uint32_t repetitions = 1000U;
 
 // RGB2GRAY conversion
 void run_rgb2gray_perf(Mat& src)
@@ -165,16 +165,29 @@ int main(int argc, char **argv)
     // alpha.convertTo(alpha, CV_32FC3, 1.0/255);
 
     // // [[for morphology and threshold]]
-    // Mat src = imread(img_path + "/pochita.png");
-    // Mat src_gray;
-    // cvtColor(src, src_gray, COLOR_RGB2GRAY);
+    Mat src = imread(img_path + "/erode_img.png");
+    Mat src_gray;
+    cvtColor(src, src_gray, COLOR_RGB2GRAY);
+    Mat src_bin;
+    cv::threshold(src_gray, src_bin, 127, 255, cv::THRESH_BINARY);
 
     std::cout.precision(10);
-    run_rgb2gray_perf(src);
-    run_threshold_perf(src_gray);
-    run_morphology_perf(src_gray);
-    run_upscale2x_perf(src);
-    run_downscale2x_perf(src);
-    run_alphaCompositing_perf(foreground, background, alpha);
+    // run_rgb2gray_perf(src);
+    // run_threshold_perf(src_gray);
+    run_morphology_perf(src_bin);
+
+    Mat src_p = imread(img_path + "/pochita.png");
+    Mat src_gray_p;
+    cvtColor(src_p, src_gray_p, COLOR_RGB2GRAY);
+    Mat src_bin_p;
+    cv::threshold(src_gray_p, src_bin_p, 127, 255, cv::THRESH_BINARY);
+
+    // run_rgb2gray_perf(src);
+    // run_threshold_perf(src_gray);
+    run_morphology_perf(src_bin_p);
+
+    // run_upscale2x_perf(src);
+    // run_downscale2x_perf(src);
+    // run_alphaCompositing_perf(foreground, background, alpha);
     return 0;
 }
