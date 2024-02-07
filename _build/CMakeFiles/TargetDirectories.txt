@@ -1,0 +1,5 @@
+/home/lev/image_proc/_build/CMakeFiles/opencv_example.dir
+/home/lev/image_proc/_build/CMakeFiles/perf_main.dir
+/home/lev/image_proc/_build/CMakeFiles/functional_main.dir
+/home/lev/image_proc/_build/CMakeFiles/edit_cache.dir
+/home/lev/image_proc/_build/CMakeFiles/rebuild_cache.dir
