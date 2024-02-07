@@ -2,6 +2,13 @@
 #include <riscv_vector.h>
 #include <iostream>
 
+#define setvl vsetvl_e8m1
+#define lse vlse8_v_u8m2
+#define fwcvt vfwcvt_f_xu_v_f16m4
+#define fmul vfmul_vf_f16m4
+#define fadd vfadd_vv_f16m4
+#define fncvt vfncvt_xu_f_w_u8m2 
+
 // RGB2GRAY conversion
 void impl_rgb2gray(cv::Mat &src, cv::Mat &dst)
 {
@@ -11,29 +18,50 @@ uint8_t* pDst = reinterpret_cast<uint8_t*>(dst.data);
 int height = src.rows, width = src.cols;
 int len = width * height * src.channels();
 
-size_t vl = vsetvl_e8m1(len);
+size_t vl = setvl(len);
+int tail = (width * height) % vl;
 
-vuint8m1_t vRd, vGrn, vBl;
-vfloat16m2_t vres, vsum;
+vuint8m2_t vRd, vGrn, vBl;
+vfloat16m4_t vres, vsum;
 
-for (uint64_t i = 0; i < len; i += vl * 3, pDst += vl) {
-    vuint8m1_t vRd = vlse8_v_u8m1(pSrc + i , 3, vl);   //запись со сдвигом
-    vuint8m1_t vGrn = vlse8_v_u8m1 (pSrc + i + 1, 3, vl);
-    vuint8m1_t vBl = vlse8_v_u8m1 (pSrc + i + 2, 3, vl);
+for (uint64_t i = 0; i < len - 3 * tail; i += vl * 3, pDst += vl) {
+    vRd = lse(pSrc + i , 3, vl);        //запись со сдвигом
+    vGrn = lse(pSrc + i + 1, 3, vl);
+    vBl = lse(pSrc + i + 2, 3, vl);
     
-    auto vRdf = vfwcvt_f_xu_v_f16m2 (vRd, vl);
-    auto vGrnf = vfwcvt_f_xu_v_f16m2(vGrn, vl);
-    auto vBlf = vfwcvt_f_xu_v_f16m2(vBl, vl);
+    auto vRdf = fwcvt(vRd, vl);              // конвертация
+    auto vGrnf = fwcvt(vGrn, vl);
+    auto vBlf = fwcvt(vBl, vl);
 
-    auto vRdm = vfmul_vf_f16m2 (vRdf, 0.299f, vl);    //умножаем
-    auto vGrnm = vfmul_vf_f16m2 (vGrnf, 0.587f, vl);
-    auto vBlm = vfmul_vf_f16m2 (vBlf, 0.114f, vl);
+    auto vRdm = fmul(vRdf, 0.299f, vl);          //умножаем
+    auto vGrnm = fmul(vGrnf, 0.587f, vl);
+    auto vBlm = fmul(vBlf, 0.114f, vl);
 
-    vsum = vfadd_vv_f16m2 (vRdm, vGrnm, vl);  //суммируем
-    vres = vfadd_vv_f16m2 (vsum, vBlm, vl);
+    vsum = fadd(vRdm, vGrnm, vl);                //суммируем
+    vres = fadd(vsum, vBlm, vl);
 
-    auto vresu = vfncvt_xu_f_w_u8m1 (vres, vl);
-    vse8_v_u8m1(pDst, vresu, vl);
+    auto vresu = fncvt(vres, vl);
+    vse8_v_u8m2(pDst, vresu, vl);
+}
+if (tail) {
+    vl = tail;
+    vRd = lse(pSrc + len - 3 * tail, 3, vl);
+    vGrn = lse(pSrc + len - 3 * tail + 1, 3, vl);
+    vBl = lse(pSrc + len - 3 * tail + 2, 3, vl);
+
+    auto vRdf = fwcvt(vRd, vl);
+    auto vGrnf = fwcvt(vGrn, vl);
+    auto vBlf = fwcvt(vBl, vl);
+
+    auto vRdm = fmul(vRdf, 0.299f, vl);
+    auto vGrnm = fmul(vGrnf, 0.587f, vl);
+    auto vBlm = fmul(vBlf, 0.114f, vl);
+
+    vsum = fadd(vRdm, vGrnm, vl);
+    vres = fadd(vsum, vBlm, vl);
+
+    auto vresu = fncvt(vres, vl);
+    vse8_v_u8m2(pDst + (width * height) - tail, vresu, vl);
 }
 }
 // Threshold function
