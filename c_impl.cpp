@@ -87,14 +87,14 @@ void c_morphology(cv::Mat &src, cv::Mat &dst)
 }
 
 // Alpha compositing
-void impl_alphaCompositing(cv::Mat& foreground, cv::Mat& background, cv::Mat& alpha, cv::Mat& dst)
+void c_impl_alphaCompositing(cv::Mat& foreground, cv::Mat& background, cv::Mat& alpha, cv::Mat& dst)
 {
     int pixelNum = foreground.rows * foreground.cols * foreground.channels();
 
     float* pFg = reinterpret_cast<float*>(foreground.data);
     float* pBg = reinterpret_cast<float*>(background.data);
     float* pA = reinterpret_cast<float*>(alpha.data);
-    float* pDst = reinterpret_cast<float*>(outImage.data);
+    float* pDst = reinterpret_cast<float*>(dst.data);
 
     for(uint32_t i = 0; i < pixelNum; ++i, ++pFg, ++pBg, ++pA, ++pDst)
     {

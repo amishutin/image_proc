@@ -22,6 +22,6 @@ void c_blur_c3(uint8_t* src, uint8_t* dst, int st, int kh, int kw, int h, int w)
 void c_morphology(cv::Mat &src, cv::Mat &dst);
 
 // alpha compositing
-void impl_alphaCompositing(cv::Mat& foreground, cv::Mat& background, cv::Mat& alpha, cv::Mat& dst)
+void c_impl_alphaCompositing(cv::Mat& foreground, cv::Mat& background, cv::Mat& alpha, cv::Mat& dst);
 
 #endif // IMPLEMENTATION_HPP
