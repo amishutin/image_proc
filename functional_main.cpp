@@ -4,6 +4,7 @@
 #include "opencv2/videoio.hpp"
 #include "implementation.hpp"
 #include "ref_implementation.hpp"
+#include "c_impl.hpp"
 #include <iostream>
 #include <string>
 
@@ -52,15 +53,25 @@ void run_boxFilter_functional(cv::Mat &src)
 }
 
 // Morphology operation - erosion
-void run_morphology_functional(cv::Mat &src)
+void run_morphology_functional(cv::Mat &src, cv::Mat &srcRGB)
 {
     Mat dst_ref, diff_image;
+    
     ref_morphology(src, dst_ref);
     Mat dst = Mat::zeros(dst_ref.size(), dst_ref.type());
     impl_morphology(src, dst);
     imwrite(img_path + "/dst_image_morphology.png", dst);
     absdiff(dst, dst_ref, diff_image);
     imwrite(img_path + "/diff_image_morphology.png", diff_image);
+
+
+    // Mat dst_refRGB, diff_imageRGB;
+    // ref_morphology(srcRGB, dst_refRGB);
+    // Mat dstRGB = Mat::zeros(dst_refRGB.size(), dst_refRGB.type());
+    // impl_morphology(srcRGB, dstRGB);
+    // imwrite(img_path + "/dst_imageRGB_morphology.png", dstRGB);
+    // absdiff(dstRGB, dst_refRGB, diff_imageRGB);
+    // imwrite(img_path + "/diff_imageRGB_morphology.png", diff_imageRGB);
 }
 
 // Upscaling 2x
@@ -148,21 +159,21 @@ int main(int argc, char **argv)
     // Mat src_gray;
     // cvtColor(src, src_gray, COLOR_RGB2GRAY);
 
-    // Mat erode_img = imread(img_path + "/erode_img.jpeg");
-    // Mat gray_erode_img;
-    // cvtColor(erode_img, gray_erode_img, COLOR_RGB2GRAY);
-    // Mat bin_erode_img;
-    // cv::threshold(gray_erode_img,bin_erode_img,127,255,cv::THRESH_BINARY);
+
+    Mat erode_imgRGB = imread(img_path + "/erode_img.jpeg");
+    Mat gray_erode_imgRGB;
+    cvtColor(erode_imgRGB, gray_erode_imgRGB, COLOR_RGB2GRAY);
+    Mat bin_erode_imgRGB;
+    cv::threshold(gray_erode_imgRGB,bin_erode_imgRGB,127,255,cv::THRESH_BINARY);
 
     Mat erode_img = imread(img_path + "/erode_img.png", IMREAD_GRAYSCALE);
     Mat bin_erode_img;
     cv::threshold(erode_img,bin_erode_img,127,255,cv::THRESH_BINARY);
 
-
     // run_rgb2gray_functional(src);
     // run_threshold_functional(src_gray);
     // run_boxFilter_functional(src);
-    run_morphology_functional(bin_erode_img);
+    run_morphology_functional(bin_erode_img, bin_erode_imgRGB);
     // run_upscale2x_functional(src);
     // run_downscale2x_functional(src);
     // run_alphaCompositing_functional(foreground, background, alpha);

@@ -5,6 +5,7 @@
 #include "implementation.hpp"
 #include "ref_implementation.hpp"
 #include "c_impl.hpp"
+#include "c_impl.hpp"
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -170,11 +171,24 @@ int main(int argc, char **argv)
     // cvtColor(src, src_gray, COLOR_RGB2GRAY);
 
     std::cout.precision(10);
-    run_rgb2gray_perf(src);
-    run_threshold_perf(src_gray);
-    run_morphology_perf(src_gray);
-    run_upscale2x_perf(src);
-    run_downscale2x_perf(src);
-    run_alphaCompositing_perf(foreground, background, alpha);
+    // run_rgb2gray_perf(src);
+    // run_threshold_perf(src_gray);
+    // run_boxFilter_perf(src);
+
+    // Mat erode_imgRGB = imread(img_path + "/erode_img.jpeg");
+    // Mat gray_erode_imgRGB;
+    // cvtColor(erode_imgRGB, gray_erode_imgRGB, COLOR_RGB2GRAY);
+    // Mat bin_erode_imgRGB;
+    // cv::threshold(gray_erode_imgRGB,bin_erode_imgRGB,127,255,cv::THRESH_BINARY);
+
+    Mat erode_img = imread(img_path + "/erode_img.png", IMREAD_GRAYSCALE);
+    Mat bin_erode_img;
+    cv::threshold(erode_img,bin_erode_img,127,255,cv::THRESH_BINARY);
+
+    run_morphology_perf(bin_erode_img);
+    
+    // run_upscale2x_perf(src);
+    // run_downscale2x_perf(src);
+    // run_alphaCompositing_perf(foreground, background, alpha);
     return 0;
 }
