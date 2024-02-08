@@ -51,10 +51,9 @@ int width = src.cols;
 int downscale = 2; 
 int dstWidth = width >> 1;
 int dstHeight = height >> 1; 
+int bigWidth = width * 2;
 size_t vl = vsetvlmax_e8m1(); 
 int remainder = dstWidth % vl;  
-size_t skip = 0; 
-size_t smth = 0; 
 uint8_t * vSrc= pSrc;
 size_t dstSize = dstHeight * dstWidth;
 size_t dstRes = dstWidth - remainder;
@@ -65,17 +64,18 @@ for (size_t row = 0; row < dstHeight; row ++){
         pDst += vl; 
     } 
     pDst += remainder; 
-    vSrc += width * 2;  
+    vSrc += bigWidth;  
 }   
     uint8_t * pDst2 = dst.data + (dstRes); 
     uint8_t * pSrc2 = src.data + (dstRes) * 2; 
-    skip = 0;
     size_t tempVl = remainder;
-    for (size_t row = 0; row < dstSize; row += dstWidth){
-        vuint8m1_t vDst = vlse8_v_u8m1(pSrc2, 2, tempVl);
-        vse8_v_u8m1(pDst2 + row, vDst, tempVl);
+    if (remainder != 0){
+        for (size_t row = 0; row < dstSize; row += dstWidth){
+            vuint8m1_t vDst = vlse8_v_u8m1(pSrc2, 2, tempVl);
+            vse8_v_u8m1(pDst2 + row, vDst, tempVl);
 
-        pSrc2 += 2 * width;  
+            pSrc2 += bigWidth;  
+        }
     }
 }
 

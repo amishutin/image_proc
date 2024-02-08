@@ -33,7 +33,7 @@ void ref_upscale2x(cv::Mat &src, cv::Mat &dst)
 // Downscaling 2x
 void ref_downscale2x(cv::Mat &src, cv::Mat &dst)
 {
-    cv::resize(src, dst, cv::Size(src.cols * 0.5, src.rows * 0.5), 0, 0, cv::INTER_LINEAR);
+    cv::resize(src, dst, cv::Size(src.cols * 0.5, src.rows * 0.5), 0, 0, cv::INTER_NEAREST);
 }
 
 // Alpha compositing
