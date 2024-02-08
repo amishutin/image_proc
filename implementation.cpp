@@ -11,23 +11,28 @@ void impl_rgb2gray(cv::Mat &src, cv::Mat &dst)
 // Threshold function
  void impl_threshold(cv::Mat &src,cv:: Mat &dst, double thresh, double maxval, int type)
 {
-     int height = src.rows;
-    int width = src.cols;
-    uint64_t len = height * width;
-    const int vl = vsetvl_e8m1(len);
+     int len = src.rows * src.cols;
+    int vl = vsetvl_e8m4(len);
+    int tail = len % vl;
     uint8_t thresh_u8 = static_cast<uint8_t>(thresh);
     
     uint8_t *pSrc = reinterpret_cast<uint8_t*>(src.data);
     uint8_t *pDst = reinterpret_cast<uint8_t*>(dst.data);
-
+    vuint8m4_t threshold = vmv_v_x_u8m4(thresh_u8, vl);
     for (int x = 0; x < len; x += vl) {
-            vuint8m1_t src_vec = vle8_v_u8m1(&pSrc[x], vl);
-            vuint8m1_t threshold = vmv_v_x_u8m1(thresh_u8, vl);
-            vuint8m1_t result = vminu_vv_u8m1(src_vec, threshold, vl);
+            vuint8m4_t src_vec = vle8_v_u8m4(&pSrc[x], vl);
+            vuint8m4_t result = vminu_vv_u8m4(src_vec, threshold, vl);
 
-            vse8_v_u8m1(&pDst[x], result, vl);
+            vse8_v_u8m4(&pDst[x], result, vl);
     }
+    if (tail) {
+        vl = tail;
+        vuint8m4_t src_vec = vle8_v_u8m4(&pSrc[len-tail], vl);
+        vuint8m4_t result = vminu_vv_u8m4(src_vec, threshold, vl);
 
+        vse8_v_u8m4(&pDst[len-tail], result, vl);
+
+    }
 }
 
 
